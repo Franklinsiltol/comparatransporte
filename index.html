@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TranspoCompare</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #f0f0f0; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            color: #333;
+        }
+        .container { 
+            background-color: #fff; 
+            padding: 20px; 
+            border-radius: 16px; 
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); 
+            width: 100%; 
+            max-width: 360px; 
+            text-align: center; 
+        }
+        .logo { 
+            width: 100px; 
+            margin-bottom: 20px; 
+        }
+        h1 { 
+            font-size: 28px; 
+            margin-bottom: 20px; 
+            color: #333; 
+        }
+        .input-container { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+            background-color: #f7f7f7; 
+            padding: 10px; 
+        }
+        .input-container i { 
+            color: #999; 
+            margin-right: 10px; 
+        }
+        input { 
+            width: calc(100% - 40px); 
+            padding: 10px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            color: #333; 
+            background-color: transparent; 
+        }
+        button { 
+            width: 100%; 
+            padding: 10px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin-bottom: 10px; 
+        }
+        button:hover { 
+            background-color: #0056b3; 
+        }
+        .results { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+        .result-box { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 15px; 
+            border-radius: 12px; 
+            color: white; 
+            text-decoration: none; 
+            font-size: 16px; 
+            text-align: center; 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
+            transition: transform 0.3s, background-color 0.3s; 
+        }
+        .result-box:hover { 
+            transform: scale(1.05); 
+        }
+        .result-box .name { 
+            font-size: 18px; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+        }
+        .result-box .price { 
+            font-size: 16px; 
+        }
+        .uber { 
+            background-color: #000000; 
+        }
+        .ninety_nine { 
+            background-color: #FFD300; 
+            color: #333; 
+        }
+        .cabify { 
+            background-color: #7B1FA2; 
+        }
+        .indrive { 
+            background-color: #53A746; 
+        }
+        .icon { 
+            font-size: 24px; 
+        }
+        .checkbox-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .checkbox-container label {
+            margin: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .checkbox-container input {
+            margin-right: 5px;
+        }
+        .loading { 
+            display: none; 
+            font-size: 16px; 
+            margin-bottom: 15px; 
+        }
+        .clear-button { 
+            display: none; 
+            padding: 10px; 
+            background-color: #dc3545; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            cursor: pointer; 
+        }
+        .clear-button:hover { 
+            background-color: #c82333; 
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <img src="https://via.placeholder.com/100x100.png?text=TranspoCompare" alt="TranspoCompare Logo" class="logo">
+        <h1>TranspoCompare</h1>
+        <div class="input-container">
+            <i class="fas fa-map-marker-alt icon"></i>
+            <input type="text" id="start" placeholder="Endereço de Partida">
+        </div>
+        <button onclick="getLocation()">Usar Minha Localização</button>
+        <div class="input-container">
+            <i class="fas fa-location-arrow icon"></i>
+            <input type="text" id="destination" placeholder="Endereço de Destino">
+        </div>
+        
+        <!-- Checkbox Container -->
+        <div class="checkbox-container">
+            <label><input type="checkbox" id="uber" checked> Uber</label>
+            <label><input type="checkbox" id="ninety_nine" checked> 99</label>
+            <label><input type="checkbox" id="cabify"> Cabify</label>
+            <label><input type="checkbox" id="indrive"> InDrive</label>
+        </div>
+        
+        <button onclick="getQuote()">Obter Cotação</button>
+        <div class="loading" id="loading">Buscando preços...</div>
+        <div class="results" id="results"></div>
+        <button id="clear-button" class="clear-button" onclick="clearResults()">Limpar Pesquisa</button>
+    </div>
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                alert("Geolocalização não é suportada por este navegador.");
+            }
+        }
+
+        function showPosition(position) {
+            const lat = position.coords.latitude, lon = position.coords.longitude;
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                .then(response => response.json())
+                .then(data => {
+                    const address = data.address;
+                    const street = address.road || '';
+                    const houseNumber = address.house_number || '';
+                    document.getElementById('start').value = `${street} ${houseNumber}`;
+                })
+                .catch(error => {
+                    console.error("Erro ao obter o endereço:", error);
+                    alert("Erro ao obter o endereço da sua localização.");
+                });
+        }
+
+        function showError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED: alert("Usuário negou a solicitação de geolocalização."); break;
+                case error.POSITION_UNAVAILABLE: alert("Informação de localização não disponível."); break;
+                case error.TIMEOUT: alert("A solicitação para obter a localização do usuário expirou."); break;
+                case error.UNKNOWN_ERROR: alert("Ocorreu um erro desconhecido."); break;
+            }
+        }
+
+        function getQuote() {
+            const start = document.getElementById('start').value;
+            const destination = document.getElementById('destination').value;
+            if (start && destination) {
+                document.getElementById('loading').style.display = 'block';
+                setTimeout(() => {
+                    const prices = [];
+                    if (document.getElementById('uber').checked) {
+                        prices.push({ 
+                            name: 'Uber', 
+                            url: `https://m.uber.com/ul/?action=setPickup&client_id=<YOUR_CLIENT_ID>&pickup[formatted_address]=${encodeURIComponent(start)}&dropoff[formatted_address]=${encodeURIComponent(destination)}`, 
+                            price: (Math.random() * 20 + 10).toFixed(2), 
+                            className: 'uber' 
+                        });
+                    }
+                    if (document.getElementById('ninety_nine').checked) {
+                        prices.push({ 
+                            name: '99', 
+                            url: 'intent://99app.com/request#Intent;scheme=rides;package=com.taxis99;end', 
+                            price: (Math.random() * 20 + 10).toFixed(2), 
+                            className: 'ninety_nine' 
+                        });
+                    }
+                    if (document.getElementById('cabify').checked) {
+                        prices.push({ 
+                            name: 'Cabify', 
+                            url: `cabify://cabify.com?pickup=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination)}`, 
+                            price
+                            price: (Math.random() * 20 + 10).toFixed(2), 
+                            className: 'cabify' 
+                        });
+                    }
+                    if (document.getElementById('indrive').checked) {
+                        prices.push({ 
+                            name: 'InDrive', 
+                            url: `indrive://indrive.com?pickup=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination)}`, 
+                            price: (Math.random() * 20 + 10).toFixed(2), 
+                            className: 'indrive' 
+                        });
+                    }
+                    
+                    const resultsContainer = document.getElementById('results');
+                    resultsContainer.innerHTML = '';
+                    
+                    prices.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+
+                    prices.forEach(price => {
+                        const resultBox = document.createElement('a');
+                        resultBox.href = price.url;
+                        resultBox.className = `result-box ${price.className}`;
+                        resultBox.innerHTML = `
+                            <div class="name">${price.name}</div>
+                            <div class="price">R$ ${price.price}</div>
+                        `;
+                        resultsContainer.appendChild(resultBox);
+                    });
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('clear-button').style.display = 'block';
+                }, 2000);
+            } else {
+                alert("Por favor, preencha os endereços de partida e destino.");
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('clear-button').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
