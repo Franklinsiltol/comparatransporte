@@ -7,17 +7,17 @@
     <style>
         body { 
             font-family: 'Segoe UI', sans-serif; 
-            background-color: #f0f0f0; 
+            background: url('https://images.unsplash.com/photo-1717343824623-06293a62a70d?q=80&w=1842&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center fixed; 
+            background-size: cover; 
             margin: 0; 
             padding: 0; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             min-height: 100vh; 
-            color: #333;
         }
         .container { 
-            background-color: #fff; 
+            background-color: rgba(255, 255, 255, 0.9); 
             padding: 20px; 
             border-radius: 16px; 
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); 
@@ -34,17 +34,39 @@
             margin-bottom: 20px; 
             color: #333; 
         }
+        .tags-container { 
+            display: flex; 
+            justify-content: space-around; 
+            margin-bottom: 15px; 
+        }
+        .tag { 
+            padding: 10px; 
+            border-radius: 8px; 
+            color: white; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: border 0.3s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-width: 70px;
+        }
+        .tag.uber { background-color: #000000; }
+        .tag.ninety_nine { background-color: #FFD300; color: #333; }
+        .tag.cabify { background-color: #7B1FA2; }
+        .tag.indrive { background-color: #53A746; }
+        .tag.selected { border: 3px solid #00ff00; }
         .input-container { 
             display: flex; 
             align-items: center; 
             margin-bottom: 15px; 
             border: 1px solid #ccc; 
             border-radius: 8px; 
-            background-color: #f7f7f7; 
+            background-color: #f9f9f9; 
             padding: 10px; 
         }
         .input-container i { 
-            color: #999; 
+            color: #333; 
             margin-right: 10px; 
         }
         input { 
@@ -54,9 +76,8 @@
             border-radius: 8px; 
             font-size: 16px; 
             color: #333; 
-            background-color: transparent; 
         }
-        button { 
+        .discreet-btn, button { 
             width: 100%; 
             padding: 10px; 
             background-color: #007bff; 
@@ -67,7 +88,7 @@
             cursor: pointer; 
             margin-bottom: 10px; 
         }
-        button:hover { 
+        .discreet-btn:hover, button:hover { 
             background-color: #0056b3; 
         }
         .results { 
@@ -100,85 +121,70 @@
         .result-box .price { 
             font-size: 16px; 
         }
-        .uber { 
-            background-color: #000000; 
-        }
-        .ninety_nine { 
-            background-color: #FFD300; 
+        .uber { background-color: #000000; }
+        .ninety_nine { background-color: #FFD300; color: #333; }
+        .cabify { background-color: #7B1FA2; }
+        .indrive { background-color: #53A746; }
+        .savings { 
+            margin-top: 20px; 
+            font-size: 18px; 
+            font-weight: bold; 
             color: #333; 
         }
-        .cabify { 
-            background-color: #7B1FA2; 
-        }
-        .indrive { 
-            background-color: #53A746; 
+        #loading { 
+            display: none; 
+            font-size: 16px; 
+            color: #333; 
+            margin-top: 20px; 
         }
         .icon { 
             font-size: 24px; 
         }
-        .checkbox-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-        .checkbox-container label {
-            margin: 5px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        .checkbox-container input {
-            margin-right: 5px;
-        }
-        .loading { 
+        #clear { 
             display: none; 
-            font-size: 16px; 
-            margin-bottom: 15px; 
-        }
-        .clear-button { 
-            display: none; 
-            padding: 10px; 
-            background-color: #dc3545; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            cursor: pointer; 
-        }
-        .clear-button:hover { 
-            background-color: #c82333; 
         }
     </style>
+    <link rel="shortcut icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2tGIdIdv1pFFjlhQZMloE6eChvfKnOcg4iA&s" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <img src="https://via.placeholder.com/100x100.png?text=TranspoCompare" alt="TranspoCompare Logo" class="logo">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2tGIdIdv1pFFjlhQZMloE6eChvfKnOcg4iA&s" alt="TranspoCompare Logo" class="logo">
         <h1>TranspoCompare</h1>
+        <div class="tags-container">
+            <div class="tag uber selected" onclick="toggleTag(this, 'uber')">Uber</div>
+            <div class="tag ninety_nine selected" onclick="toggleTag(this, 'ninety_nine')">99</div>
+            <div class="tag cabify" onclick="toggleTag(this, 'cabify')">Cabify</div>
+            <div class="tag indrive" onclick="toggleTag(this, 'indrive')">InDrive</div>
+        </div>
         <div class="input-container">
             <i class="fas fa-map-marker-alt icon"></i>
             <input type="text" id="start" placeholder="Endereço de Partida">
         </div>
-        <button onclick="getLocation()">Usar Minha Localização</button>
+        <button class="discreet-btn" onclick="getLocation()">Usar Minha Localização</button>
         <div class="input-container">
             <i class="fas fa-location-arrow icon"></i>
             <input type="text" id="destination" placeholder="Endereço de Destino">
         </div>
-        
-        <!-- Checkbox Container -->
-        <div class="checkbox-container">
-            <label><input type="checkbox" id="uber" checked> Uber</label>
-            <label><input type="checkbox" id="ninety_nine" checked> 99</label>
-            <label><input type="checkbox" id="cabify"> Cabify</label>
-            <label><input type="checkbox" id="indrive"> InDrive</label>
-        </div>
-        
         <button onclick="getQuote()">Obter Cotação</button>
-        <div class="loading" id="loading">Buscando preços...</div>
+        <button id="clear" class="discreet-btn" onclick="clearFields()">Limpar Pesquisa</button>
+        <div id="loading">Buscando preço...</div>
         <div class="results" id="results"></div>
-        <button id="clear-button" class="clear-button" onclick="clearResults()">Limpar Pesquisa</button>
+        <div class="savings" id="savings"></div>
     </div>
     <script>
+        let selectedApps = ['uber', 'ninety_nine'];
+
+        function toggleTag(element, app) {
+            element.classList.toggle('selected');
+            const index = selectedApps.indexOf(app);
+            if (index > -1) {
+                selectedApps.splice(index, 1);
+            } else {
+                selectedApps.push(app);
+            }
+        }
+
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(showPosition, showError);
@@ -206,8 +212,8 @@
         function showError(error) {
             switch (error.code) {
                 case error.PERMISSION_DENIED: alert("Usuário negou a solicitação de geolocalização."); break;
-                case error.POSITION_UNAVAILABLE: alert("Informação de localização não disponível."); break;
-                case error.TIMEOUT: alert("A solicitação para obter a localização do usuário expirou."); break;
+                case error.POSITION_UNAVAILABLE: alert("Informações de localização estão indisponíveis."); break;
+                case error.TIMEOUT: alert("A solicitação de localização expirou."); break;
                 case error.UNKNOWN_ERROR: alert("Ocorreu um erro desconhecido."); break;
             }
         }
@@ -215,72 +221,58 @@
         function getQuote() {
             const start = document.getElementById('start').value;
             const destination = document.getElementById('destination').value;
-            if (start && destination) {
-                document.getElementById('loading').style.display = 'block';
-                setTimeout(() => {
-                    const prices = [];
-                    if (document.getElementById('uber').checked) {
-                        prices.push({ 
-                            name: 'Uber', 
-                            url: `https://m.uber.com/ul/?action=setPickup&client_id=<YOUR_CLIENT_ID>&pickup[formatted_address]=${encodeURIComponent(start)}&dropoff[formatted_address]=${encodeURIComponent(destination)}`, 
-                            price: (Math.random() * 20 + 10).toFixed(2), 
-                            className: 'uber' 
-                        });
-                    }
-                    if (document.getElementById('ninety_nine').checked) {
-                        prices.push({ 
-                            name: '99', 
-                            url: 'intent://99app.com/request#Intent;scheme=rides;package=com.taxis99;end', 
-                            price: (Math.random() * 20 + 10).toFixed(2), 
-                            className: 'ninety_nine' 
-                        });
-                    }
-                    if (document.getElementById('cabify').checked) {
-                        prices.push({ 
-                            name: 'Cabify', 
-                            url: `cabify://cabify.com?pickup=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination)}`, 
-                            price
-                            price: (Math.random() * 20 + 10).toFixed(2), 
-                            className: 'cabify' 
-                        });
-                    }
-                    if (document.getElementById('indrive').checked) {
-                        prices.push({ 
-                            name: 'InDrive', 
-                            url: `indrive://indrive.com?pickup=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination)}`, 
-                            price: (Math.random() * 20 + 10).toFixed(2), 
-                            className: 'indrive' 
-                        });
-                    }
-                    
-                    const resultsContainer = document.getElementById('results');
-                    resultsContainer.innerHTML = '';
-                    
-                    prices.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-
-                    prices.forEach(price => {
-                        const resultBox = document.createElement('a');
-                        resultBox.href = price.url;
-                        resultBox.className = `result-box ${price.className}`;
-                        resultBox.innerHTML = `
-                            <div class="name">${price.name}</div>
-                            <div class="price">R$ ${price.price}</div>
-                        `;
-                        resultsContainer.appendChild(resultBox);
-                    });
-                    
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('clear-button').style.display = 'block';
-                }, 2000);
-            } else {
-                alert("Por favor, preencha os endereços de partida e destino.");
+            if (!start || !destination) {
+                alert('Por favor, insira os endereços de partida e destino.');
+                return;
             }
+
+            document.getElementById('loading').style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('clear').style.display = 'block';
+
+                const results = [
+                    { app: 'uber', price: 'R$ 20,00' },
+                    { app: 'ninety_nine', price: 'R$ 18,00' },
+                    { app: 'cabify', price: 'R$ 22,00' },
+                    { app: 'indrive', price: 'R$ 19,00' },
+                ];
+
+                let selectedResults = results.filter(result => selectedApps.includes(result.app));
+                selectedResults = selectedResults.sort((a, b) => parseFloat(a.price.replace('R$', '')) - parseFloat(b.price.replace('R$', '')));
+
+                document.getElementById('results').innerHTML = selectedResults.map(result => `
+                    <a href="#" class="result-box ${result.app}">
+                        <div class="name">${capitalizeFirstLetter(result.app)}</div>
+                        <div class="price">${result.price}</div>
+                    </a>
+                `).join('');
+
+                if (selectedResults.length > 1) {
+                    const savings = parseFloat(selectedResults[1].price.replace('R$', '')) - parseFloat(selectedResults[0].price.replace('R$', ''));
+                    document.getElementById('savings').textContent = `Você economiza R$ ${savings.toFixed(2)} escolhendo ${capitalizeFirstLetter(selectedResults[0].app)}!`;
+                }
+            }, 1000);
         }
 
-        function clearResults() {
+        function clearFields() {
+            document.getElementById('start').value = '';
+            document.getElementById('destination').value = '';
             document.getElementById('results').innerHTML = '';
-            document.getElementById('clear-button').style.display = 'none';
+            document.getElementById('savings').textContent = '';
+            document.getElementById('clear').style.display = 'none';
         }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        function capitalizeFirstLetter(string) {
+    if (string === 'ninety_nine') return '99';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
     </script>
 </body>
 </html>
