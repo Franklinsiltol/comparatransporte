@@ -40,6 +40,14 @@
             border-radius: 4px;
         }
 
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
         button {
             width: 100%;
             padding: 10px;
@@ -54,7 +62,7 @@
             background-color: #218838;
         }
 
-        #overlay {
+        #overlay, #modal {
             display: none;
             position: fixed;
             top: 0;
@@ -65,13 +73,23 @@
             z-index: 1000;
         }
 
-        #overlay .spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 24px;
+        #modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: auto;
+            margin-top: 100px;
+        }
+
+        #modal-content h2 {
+            margin-top: 0;
+        }
+
+        #close {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
         }
 
         .results {
@@ -123,13 +141,113 @@
     <input type="text" id="destination" placeholder="Digite o destino">
 
     <button id="quoteButton">Obter Cotação</button>
+    <button id="open-modal">Configurações</button>
 
     <div class="results" id="results"></div>
     <div id="economyMessage" class="economy-message"></div>
 </div>
 
+<!-- Modal para atualizar taxas -->
+<div id="modal">
+    <div id="modal-content">
+        <span id="close">&times;</span>
+        <h2>Atualizar Taxas</h2>
+        <label for="password">Senha</label>
+        <input type="password" id="password" placeholder="Digite a senha">
+        <label for="uber-rate">Taxa Uber</label>
+        <input type="text" id="uber-rate" placeholder="Digite a nova taxa do Uber">
+        <label for="99-rate">Taxa 99</label>
+        <input type="text" id="99-rate" placeholder="Digite a nova taxa do 99">
+        <button id="saveButton">Salvar Alterações</button>
+    </div>
+</div>
+
 <script>
-    // Função para calcular a distância entre dois pontos usando a fórmula de Haversine
+    const TOKEN = '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';
+    const REPO_OWNER = 'Franklinsiltol';
+    const REPO_NAME = 'comparatransporte';
+    const FILE_PATH = 'taxas.json';
+    const BRANCH = 'main';
+    const PASSWORD = 'senhaSegura'; // Substitua pela senha desejada
+
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+
+    document.getElementById('quoteButton').addEventListener('click', obterCotacoes);
+    document.getElementById('open-modal').addEventListener('click', openModal);
+    document.getElementById('close').addEventListener('click', closeModal);
+    document.getElementById('saveButton').addEventListener('click', saveChanges);
+
+    function fetchData() {
+        fetch(apiUrl, {
+            headers: {
+                'Authorization': `token ${TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const content = atob(data.content); // Decodifica o conteúdo do arquivo
+            const json = JSON.parse(content);
+            document.getElementById('uber-rate').value = json.uberRate;
+            document.getElementById('99-rate').value = json['99Rate'];
+        })
+        .catch(error => console.error('Erro ao buscar dados:', error));
+    }
+
+    function openModal() {
+        document.getElementById('modal').style.display = 'block';
+        fetchData(); // Preenche o formulário com dados atuais
+    }
+
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+    }
+
+    function saveChanges() {
+        const password = document.getElementById('password').value;
+        if (password !== PASSWORD) {
+            alert('Senha incorreta!');
+            return;
+        }
+
+        const uberRate = document.getElementById('uber-rate').value;
+        const rate99 = document.getElementById('99-rate').value;
+        const content = JSON.stringify({ uberRate, 99Rate: rate99 }, null, 2);
+
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `token ${TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const sha = data.sha;
+
+            return fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Atualizar taxas',
+                    content: btoa(content), // Codifica o conteúdo em base64
+                    sha: sha,
+                    branch: BRANCH
+                })
+            });
+        })
+        .then(response => response.json())
+        .then(() => {
+            alert('Alterações salvas com sucesso!');
+            closeModal();
+        })
+        .catch(error => console.error('Erro ao salvar alterações:', error));
+    }
+
     function calcularDistancia(lat1, lon1, lat2, lon2) {
         const R = 6371; // Raio da Terra em km
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -142,110 +260,52 @@
         return distancia;
     }
 
-    // Função para estimar preços do Uber com base na distância real
     function calcularPrecoEstimadoUber(distancia) {
         const precoPorKm = 2.15; // Preço estimado por quilômetro para o Uber
         const taxaBase = 2.00;   // Tarifa base do Uber
         return (taxaBase + (precoPorKm * distancia)).toFixed(2);
     }
 
-    // Função para estimar preços do 99 com base na distância real
     function calcularPrecoEstimado99(distancia) {
-        const precoPorKm = 2.20; // Preço estimado por quilômetro para o 99
-        const taxaBase = 2.10;   // Tarifa base do 99
+        const precoPorKm = 1.85; // Preço estimado por quilômetro para o 99
+        const taxaBase = 1.50;   // Tarifa base do 99
         return (taxaBase + (precoPorKm * distancia)).toFixed(2);
     }
 
-    // Função para geocodificar um endereço e retornar coordenadas usando OpenStreetMap Nominatim
-    function geocodeAddress(address) {
-        return fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.length > 0) {
-                    const location = data[0];
-                    return { lat: parseFloat(location.lat), lng: parseFloat(location.lon) };
-                } else {
-                    throw new Error('Geocodificação falhou');
-                }
-            });
-    }
+    function obterCotacoes() {
+        const start = document.getElementById('start').value;
+        const destination = document.getElementById('destination').value;
 
-    // Função para gerar links para apps Uber ou 99 com rota predefinida
-    function generateAppLink(appName, startLat, startLong, destLat, destLong) {
-        if (appName === 'Uber') {
-            return `uber://?action=setPickup&pickup[latitude]=${startLat}&pickup[longitude]=${startLong}&dropoff[latitude]=${destLat}&dropoff[longitude]=${destLong}`;
-        } else if (appName === '99') {
-            return `https://99app.com/?action=setPickup&pickup[latitude]=${startLat}&pickup[longitude]=${startLong}&dropoff[latitude]=${destLat}&dropoff[longitude]=${destLong}`;
+        if (!start || !destination) {
+            alert('Por favor, preencha ambos os campos.');
+            return;
         }
-        return '#';
-    }
 
-    // Função para obter cotações reais com base na distância calculada
-    async function obterCotacoes() {
-        const startAddress = document.getElementById('start').value;
-        const destinationAddress = document.getElementById('destination').value;
-
-        // Exibir overlay durante o cálculo
         document.getElementById('overlay').style.display = 'block';
 
-        try {
-            // Geocodificar ambos os endereços
-            const startCoordinates = await geocodeAddress(startAddress);
-            const destinationCoordinates = await geocodeAddress(destinationAddress);
+        // Simulando a distância entre os endereços (substitua pela lógica real)
+        const distancia = 10; // Em quilômetros
 
-            // Calcular a distância real entre os dois pontos
-            const distancia = calcularDistancia(
-                startCoordinates.lat, startCoordinates.lng,
-                destinationCoordinates.lat, destinationCoordinates.lng
-            );
+        // Simula as cotações
+        const precoUber = calcularPrecoEstimadoUber(distancia);
+        const preco99 = calcularPrecoEstimado99(distancia);
 
-            // Calcular estimativas de preços com base na distância real
-            const estimativaUber = calcularPrecoEstimadoUber(distancia);
-            const estimativa99 = calcularPrecoEstimado99(distancia);
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+            <div class="result-item">
+                <span class="app-name">Uber</span>
+                <span class="price">R$ ${precoUber}</span>
+            </div>
+            <div class="result-item">
+                <span class="app-name">99</span>
+                <span class="price">R$ ${preco99}</span>
+            </div>
+        `;
 
-            // Ordenar as estimativas pelo valor
-            const resultados = [
-                { nome: 'Uber', preco: parseFloat(estimativaUber) },
-                { nome: '99', preco: parseFloat(estimativa99) }
-            ];
-
-            resultados.sort((a, b) => a.preco - b.preco);
-
-            // Exibir os resultados
-            const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = '';
-
-            resultados.forEach(cotacao => {
-                const div = document.createElement('div');
-                div.classList.add('result-item');
-                div.innerHTML = `
-                    <span class="app-name">${cotacao.nome}</span>
-                    <span class="price">R$ ${cotacao.preco}</span>
-                `;
-                div.addEventListener('click', function() {
-                    const appLink = generateAppLink(cotacao.nome, startCoordinates.lat, startCoordinates.lng, destinationCoordinates.lat, destinationCoordinates.lng);
-                    window.location.href = appLink; // Abrir o app com a rota predefinida
-                });
-                resultsContainer.appendChild(div);
-            });
-
-            // Exibir mensagem de economia
-            const economia = (resultados[1].preco - resultados[0].preco).toFixed(2);
-            const economyMessage = document.getElementById('economyMessage');
-            economyMessage.textContent = `Você economiza R$ ${economia} se escolher ${resultados[0].nome}!`;
-
-        } catch
-        (error) {
-            console.error('Erro ao obter cotações:', error);
-            alert('Não foi possível obter as cotações. Verifique os endereços inseridos.');
-        } finally {
-            // Ocultar overlay após o cálculo
-            document.getElementById('overlay').style.display = 'none';
-        }
+        const economia = Math.abs(precoUber - preco99).toFixed(2);
+        document.getElementById('economyMessage').innerText = `Economia de R$ ${economia} usando o aplicativo mais barato.`;
+        document.getElementById('overlay').style.display = 'none';
     }
-
-    // Adicionar evento ao botão para obter cotações
-    document.getElementById('quoteButton').addEventListener('click', obterCotacoes);
 </script>
 
 </body>
