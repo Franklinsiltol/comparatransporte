@@ -32,15 +32,7 @@
             font-weight: bold;
         }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        input[type="password"] {
+        input[type="text"], input[type="password"] {
             width: 100%;
             padding: 10px;
             margin: 5px 0 20px;
@@ -105,7 +97,6 @@
             justify-content: space-between;
             align-items: center;
             border: 1px solid #ddd;
-            cursor: pointer;
         }
 
         .result-item .app-name {
@@ -168,7 +159,7 @@
     const REPO_NAME = 'comparatransporte';
     const FILE_PATH = 'taxas.json';
     const BRANCH = 'main';
-    const PASSWORD = 'senhaSegura'; // Substitua pela senha desejada
+    const PASSWORD = 'Beemote@10'; // Senha atualizada
 
     const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
 
@@ -188,8 +179,8 @@
         .then(data => {
             const content = atob(data.content); // Decodifica o conteúdo do arquivo
             const json = JSON.parse(content);
-            document.getElementById('uber-rate').value = json.uberRate;
-            document.getElementById('99-rate').value = json['99Rate'];
+            document.getElementById('uber-rate').value = json.uberRate || '';
+            document.getElementById('99-rate').value = json['99Rate'] || '';
         })
         .catch(error => console.error('Erro ao buscar dados:', error));
     }
@@ -246,18 +237,6 @@
             closeModal();
         })
         .catch(error => console.error('Erro ao salvar alterações:', error));
-    }
-
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Raio da Terra em km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distancia = R * c; // Distância em km
-        return distancia;
     }
 
     function calcularPrecoEstimadoUber(distancia) {
