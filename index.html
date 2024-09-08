@@ -1,158 +1,252 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Taxas</title>
+    <title>Cotação de Transporte</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
-        button {
-            margin-top: 10px;
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        #output {
-            white-space: pre-wrap;
-            background: #f0f0f0;
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            margin: 10px 0 5px;
+            display: block;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
             padding: 10px;
+            margin: 5px 0 20px;
             border: 1px solid #ddd;
+            border-radius: 4px;
         }
-        .hidden {
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #overlay {
             display: none;
-        }
-        #modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        #overlay .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-        }
-        #modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            width: 300px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-        }
-        #close {
-            float: right;
-            font-size: 20px;
+            border: 1px solid #ddd;
             cursor: pointer;
         }
-        form label {
-            display: block;
+
+        .result-item .app-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .result-item .price {
+            font-size: 16px;
+            color: #28a745;
+        }
+
+        .economy-message {
             margin-top: 10px;
+            font-size: 18px;
+            color: #218838;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>Gerenciador de Taxas</h1>
-    <button id="fetch-data">Buscar Dados</button>
-    <button id="open-modal">Alterar Taxas</button>
 
-    <pre id="output"></pre>
+<div id="overlay">
+    <div class="spinner">Calculando cotações...</div>
+</div>
 
-    <!-- Modal para alterar taxas -->
-    <div id="modal" class="hidden">
-        <div id="modal-content">
-            <span id="close">&times;</span>
-            <h2>Alterar Taxas</h2>
-            <form id="tax-form">
-                <label for="uber-rate">Taxa Uber:</label>
-                <input type="number" id="uber-rate" step="0.01" required><br>
-                <label for="99-rate">Taxa 99:</label>
-                <input type="number" id="99-rate" step="0.01" required><br>
-                <button type="submit">Salvar Alterações</button>
-            </form>
-        </div>
-    </div>
+<div class="container">
+    <h1>Cotação de Transporte</h1>
+    <label for="start">Local de Partida</label>
+    <input type="text" id="start" placeholder="Digite o local de partida">
+    
+    <label for="destination">Destino</label>
+    <input type="text" id="destination" placeholder="Digite o destino">
 
-    <script>
-        const TOKEN = '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';
-        const REPO_OWNER = 'Franklinsiltol';
-        const REPO_NAME = 'comparatransporte';
-        const FILE_PATH = 'taxas.json';
-        const BRANCH = 'main';
+    <button id="quoteButton">Obter Cotação</button>
 
-        const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+    <div class="results" id="results"></div>
+    <div id="economyMessage" class="economy-message"></div>
+</div>
 
-        document.getElementById('fetch-data').addEventListener('click', fetchData);
-        document.getElementById('open-modal').addEventListener('click', openModal);
-        document.getElementById('close').addEventListener('click', closeModal);
-        document.getElementById('tax-form').addEventListener('submit', saveChanges);
+<script>
+    // Função para calcular a distância entre dois pontos usando a fórmula de Haversine
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Raio da Terra em km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distancia = R * c; // Distância em km
+        return distancia;
+    }
 
-        function fetchData() {
-            fetch(apiUrl, {
-                headers: {
-                    'Authorization': `token ${TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            })
+    // Função para estimar preços do Uber com base na distância real
+    function calcularPrecoEstimadoUber(distancia) {
+        const precoPorKm = 2.15; // Preço estimado por quilômetro para o Uber
+        const taxaBase = 2.00;   // Tarifa base do Uber
+        return (taxaBase + (precoPorKm * distancia)).toFixed(2);
+    }
+
+    // Função para estimar preços do 99 com base na distância real
+    function calcularPrecoEstimado99(distancia) {
+        const precoPorKm = 2.20; // Preço estimado por quilômetro para o 99
+        const taxaBase = 2.10;   // Tarifa base do 99
+        return (taxaBase + (precoPorKm * distancia)).toFixed(2);
+    }
+
+    // Função para geocodificar um endereço e retornar coordenadas usando OpenStreetMap Nominatim
+    function geocodeAddress(address) {
+        return fetch(https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)})
             .then(response => response.json())
             .then(data => {
-                const content = atob(data.content); // Decodifica o conteúdo do arquivo
-                document.getElementById('output').textContent = content;
-                // Preenche o formulário com os dados atuais
-                const json = JSON.parse(content);
-                document.getElementById('uber-rate').value = json.uberRate;
-                document.getElementById('99-rate').value = json['99Rate'];
-            })
-            .catch(error => console.error('Erro ao buscar dados:', error));
-        }
-
-        function openModal() {
-            document.getElementById('modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-        }
-
-        function saveChanges(event) {
-            event.preventDefault();
-            const uberRate = document.getElementById('uber-rate').value;
-            const rate99 = document.getElementById('99-rate').value;
-
-            const content = JSON.stringify({ uberRate, 99Rate: rate99 }, null, 2);
-
-            fetch(apiUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `token ${TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                if (data && data.length > 0) {
+                    const location = data[0];
+                    return { lat: parseFloat(location.lat), lng: parseFloat(location.lon) };
+                } else {
+                    throw new Error('Geocodificação falhou');
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const sha = data.sha;
+            });
+    }
 
-                return fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Atualizar taxas',
-                        content: btoa(content), // Codifica o conteúdo em base64
-                        sha: sha,
-                        branch: BRANCH
-                    })
+    // Função para gerar links para apps Uber ou 99 com rota predefinida
+    function generateAppLink(appName, startLat, startLong, destLat, destLong) {
+        if (appName === 'Uber') {
+            return uber://?action=setPickup&pickup[latitude]=${startLat}&pickup[longitude]=${startLong}&dropoff[latitude]=${destLat}&dropoff[longitude]=${destLong};
+        } else if (appName === '99') {
+            return https://99app.com/?action=setPickup&pickup[latitude]=${startLat}&pickup[longitude]=${startLong}&dropoff[latitude]=${destLat}&dropoff[longitude]=${destLong};
+        }
+        return '#';
+    }
+
+    // Função para obter cotações reais com base na distância calculada
+    async function obterCotacoes() {
+        const startAddress = document.getElementById('start').value;
+        const destinationAddress = document.getElementById('destination').value;
+
+        // Exibir overlay durante o cálculo
+        document.getElementById('overlay').style.display = 'block';
+
+        try {
+            // Geocodificar ambos os endereços
+            const startCoordinates = await geocodeAddress(startAddress);
+            const destinationCoordinates = await geocodeAddress(destinationAddress);
+
+            // Calcular a distância real entre os dois pontos
+            const distancia = calcularDistancia(
+                startCoordinates.lat, startCoordinates.lng,
+                destinationCoordinates.lat, destinationCoordinates.lng
+            );
+
+            // Calcular estimativas de preços com base na distância real
+            const estimativaUber = calcularPrecoEstimadoUber(distancia);
+            const estimativa99 = calcularPrecoEstimado99(distancia);
+
+            // Ordenar as estimativas pelo valor
+            const resultados = [
+                { nome: 'Uber', preco: parseFloat(estimativaUber) },
+                { nome: '99', preco: parseFloat(estimativa99) }
+            ];
+
+            resultados.sort((a, b) => a.preco - b.preco);
+
+            // Exibir os resultados
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            resultados.forEach(cotacao => {
+                const div = document.createElement('div');
+                div.classList.add('result-item');
+                div.innerHTML = 
+                    <span class="app-name">${cotacao.nome}</span>
+                    <span class="price">R$ ${cotacao.preco}</span>
+                ;
+                div.addEventListener('click', function() {
+                    const appLink = generateAppLink(cotacao.nome, startCoordinates.lat, startCoordinates.lng, destinationCoordinates.lat, destinationCoordinates.lng);
+                    window.location.href = appLink; // Abrir o app com a rota predefinida
                 });
-            })
-            .then(response => response.json())
-            .then(() => {
-                alert('Alterações salvas com sucesso!');
-                closeModal();
-            })
-            .catch(error => console.error('Erro ao salvar alterações:', error));
+                resultsContainer.appendChild(div);
+            });
+
+            // Exibir mensagem de economia
+            const economia = (resultados[1].preco - resultados[0].preco).toFixed(2);
+            const economyMessage = document.getElementById('economyMessage');
+            economyMessage.textContent = Você economiza R$ ${economia} se escolher ${resultados[0].nome}!;
+
+        } catch
+        (error) {
+            console.error('Erro ao obter cotações:', error);
+            alert('Não foi possível obter as cotações. Verifique os endereços inseridos.');
+        } finally {
+            // Ocultar overlay após o cálculo
+            document.getElementById('overlay').style.display = 'none';
         }
-    </script>
+    }
+
+    // Adicionar evento ao botão para obter cotações
+    document.getElementById('quoteButton').addEventListener('click', obterCotacoes);
+</script>
+
 </body>
 </html>
