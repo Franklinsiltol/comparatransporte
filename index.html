@@ -1,312 +1,158 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotação de Transporte</title>
+    <title>Gerenciador de Taxas</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
+            margin: 20px;
         }
-
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-
-        label {
-            margin: 10px 0 5px;
-            display: block;
-            font-weight: bold;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
         button {
-            width: 100%;
+            margin-top: 10px;
+        }
+        #output {
+            white-space: pre-wrap;
+            background: #f0f0f0;
             padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border: 1px solid #ddd;
         }
-
-        button:hover {
-            background-color: #218838;
-        }
-
-        #overlay, #modal {
+        .hidden {
             display: none;
+        }
+        #modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
         #modal-content {
-            background: white;
+            background: #fff;
             padding: 20px;
-            border-radius: 8px;
-            max-width: 400px;
-            margin: auto;
-            margin-top: 100px;
+            border-radius: 5px;
+            width: 300px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
-
-        #modal-content h2 {
-            margin-top: 0;
-        }
-
         #close {
             float: right;
             font-size: 20px;
             cursor: pointer;
         }
-
-        .results {
-            margin-top: 20px;
-        }
-
-        .result-item {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #ddd;
-            cursor: pointer;
-        }
-
-        .result-item .app-name {
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .result-item .price {
-            font-size: 16px;
-            color: #28a745;
-        }
-
-        .economy-message {
+        form label {
+            display: block;
             margin-top: 10px;
-            font-size: 18px;
-            color: #218838;
-            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <h1>Gerenciador de Taxas</h1>
+    <button id="fetch-data">Buscar Dados</button>
+    <button id="open-modal">Alterar Taxas</button>
 
-<div id="overlay">
-    <div class="spinner">Calculando cotações...</div>
-</div>
+    <pre id="output"></pre>
 
-<div class="container">
-    <h1>Cotação de Transporte</h1>
-    <label for="start">Local de Partida</label>
-    <input type="text" id="start" placeholder="Digite o local de partida">
-    
-    <label for="destination">Destino</label>
-    <input type="text" id="destination" placeholder="Digite o destino">
-
-    <button id="quoteButton">Obter Cotação</button>
-    <button id="open-modal">Configurações</button>
-
-    <div class="results" id="results"></div>
-    <div id="economyMessage" class="economy-message"></div>
-</div>
-
-<!-- Modal para atualizar taxas -->
-<div id="modal">
-    <div id="modal-content">
-        <span id="close">&times;</span>
-        <h2>Atualizar Taxas</h2>
-        <label for="password">Senha</label>
-        <input type="password" id="password" placeholder="Digite a senha">
-        <label for="uber-rate">Taxa Uber</label>
-        <input type="text" id="uber-rate" placeholder="Digite a nova taxa do Uber">
-        <label for="99-rate">Taxa 99</label>
-        <input type="text" id="99-rate" placeholder="Digite a nova taxa do 99">
-        <button id="saveButton">Salvar Alterações</button>
+    <!-- Modal para alterar taxas -->
+    <div id="modal" class="hidden">
+        <div id="modal-content">
+            <span id="close">&times;</span>
+            <h2>Alterar Taxas</h2>
+            <form id="tax-form">
+                <label for="uber-rate">Taxa Uber:</label>
+                <input type="number" id="uber-rate" step="0.01" required><br>
+                <label for="99-rate">Taxa 99:</label>
+                <input type="number" id="99-rate" step="0.01" required><br>
+                <button type="submit">Salvar Alterações</button>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-    const TOKEN = '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';
-    const REPO_OWNER = 'Franklinsiltol';
-    const REPO_NAME = 'comparatransporte';
-    const FILE_PATH = 'taxas.json';
-    const BRANCH = 'main';
-    const PASSWORD = 'senhaSegura'; // Substitua pela senha desejada
+    <script>
+        const TOKEN = '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';
+        const REPO_OWNER = 'Franklinsiltol';
+        const REPO_NAME = 'comparatransporte';
+        const FILE_PATH = 'taxas.json';
+        const BRANCH = 'main';
 
-    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
 
-    document.getElementById('quoteButton').addEventListener('click', obterCotacoes);
-    document.getElementById('open-modal').addEventListener('click', openModal);
-    document.getElementById('close').addEventListener('click', closeModal);
-    document.getElementById('saveButton').addEventListener('click', saveChanges);
+        document.getElementById('fetch-data').addEventListener('click', fetchData);
+        document.getElementById('open-modal').addEventListener('click', openModal);
+        document.getElementById('close').addEventListener('click', closeModal);
+        document.getElementById('tax-form').addEventListener('submit', saveChanges);
 
-    function fetchData() {
-        fetch(apiUrl, {
-            headers: {
-                'Authorization': `token ${TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const content = atob(data.content); // Decodifica o conteúdo do arquivo
-            const json = JSON.parse(content);
-            document.getElementById('uber-rate').value = json.uberRate;
-            document.getElementById('99-rate').value = json['99Rate'];
-        })
-        .catch(error => console.error('Erro ao buscar dados:', error));
-    }
-
-    function openModal() {
-        document.getElementById('modal').style.display = 'block';
-        fetchData(); // Preenche o formulário com dados atuais
-    }
-
-    function closeModal() {
-        document.getElementById('modal').style.display = 'none';
-    }
-
-    function saveChanges() {
-        const password = document.getElementById('password').value;
-        if (password !== PASSWORD) {
-            alert('Senha incorreta!');
-            return;
-        }
-
-        const uberRate = document.getElementById('uber-rate').value;
-        const rate99 = document.getElementById('99-rate').value;
-        const content = JSON.stringify({ uberRate, 99Rate: rate99 }, null, 2);
-
-        fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Authorization': `token ${TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const sha = data.sha;
-
-            return fetch(apiUrl, {
-                method: 'PUT',
+        function fetchData() {
+            fetch(apiUrl, {
                 headers: {
                     'Authorization': `token ${TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: 'Atualizar taxas',
-                    content: btoa(content), // Codifica o conteúdo em base64
-                    sha: sha,
-                    branch: BRANCH
-                })
-            });
-        })
-        .then(response => response.json())
-        .then(() => {
-            alert('Alterações salvas com sucesso!');
-            closeModal();
-        })
-        .catch(error => console.error('Erro ao salvar alterações:', error));
-    }
-
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Raio da Terra em km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distancia = R * c; // Distância em km
-        return distancia;
-    }
-
-    function calcularPrecoEstimadoUber(distancia) {
-        const precoPorKm = 2.15; // Preço estimado por quilômetro para o Uber
-        const taxaBase = 2.00;   // Tarifa base do Uber
-        return (taxaBase + (precoPorKm * distancia)).toFixed(2);
-    }
-
-    function calcularPrecoEstimado99(distancia) {
-        const precoPorKm = 1.85; // Preço estimado por quilômetro para o 99
-        const taxaBase = 1.50;   // Tarifa base do 99
-        return (taxaBase + (precoPorKm * distancia)).toFixed(2);
-    }
-
-    function obterCotacoes() {
-        const start = document.getElementById('start').value;
-        const destination = document.getElementById('destination').value;
-
-        if (!start || !destination) {
-            alert('Por favor, preencha ambos os campos.');
-            return;
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const content = atob(data.content); // Decodifica o conteúdo do arquivo
+                document.getElementById('output').textContent = content;
+                // Preenche o formulário com os dados atuais
+                const json = JSON.parse(content);
+                document.getElementById('uber-rate').value = json.uberRate;
+                document.getElementById('99-rate').value = json['99Rate'];
+            })
+            .catch(error => console.error('Erro ao buscar dados:', error));
         }
 
-        document.getElementById('overlay').style.display = 'block';
+        function openModal() {
+            document.getElementById('modal').classList.remove('hidden');
+        }
 
-        // Simulando a distância entre os endereços (substitua pela lógica real)
-        const distancia = 10; // Em quilômetros
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
 
-        // Simula as cotações
-        const precoUber = calcularPrecoEstimadoUber(distancia);
-        const preco99 = calcularPrecoEstimado99(distancia);
+        function saveChanges(event) {
+            event.preventDefault();
+            const uberRate = document.getElementById('uber-rate').value;
+            const rate99 = document.getElementById('99-rate').value;
 
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = `
-            <div class="result-item">
-                <span class="app-name">Uber</span>
-                <span class="price">R$ ${precoUber}</span>
-            </div>
-            <div class="result-item">
-                <span class="app-name">99</span>
-                <span class="price">R$ ${preco99}</span>
-            </div>
-        `;
+            const content = JSON.stringify({ uberRate, 99Rate: rate99 }, null, 2);
 
-        const economia = Math.abs(precoUber - preco99).toFixed(2);
-        document.getElementById('economyMessage').innerText = `Economia de R$ ${economia} usando o aplicativo mais barato.`;
-        document.getElementById('overlay').style.display = 'none';
-    }
-</script>
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const sha = data.sha;
 
+                return fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Atualizar taxas',
+                        content: btoa(content), // Codifica o conteúdo em base64
+                        sha: sha,
+                        branch: BRANCH
+                    })
+                });
+            })
+            .then(response => response.json())
+            .then(() => {
+                alert('Alterações salvas com sucesso!');
+                closeModal();
+            })
+            .catch(error => console.error('Erro ao salvar alterações:', error));
+        }
+    </script>
 </body>
 </html>
