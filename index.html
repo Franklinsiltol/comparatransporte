@@ -144,14 +144,14 @@
 
     // Função para estimar preços do Uber com base na distância real
     function calcularPrecoEstimadoUber(distancia) {
-        const precoPorKm = 3.10; // Preço estimado por quilômetro para o Uber
+        const precoPorKm = 4.10; // Preço estimado por quilômetro para o Uber
         const taxaBase = 5.00;   // Tarifa base do Uber
         return (taxaBase + (precoPorKm * distancia)).toFixed(2);
     }
 
     // Função para estimar preços do 99 com base na distância real
     function calcularPrecoEstimado99(distancia) {
-        const precoPorKm = 3.20; // Preço estimado por quilômetro para o 99
+        const precoPorKm = 4.20; // Preço estimado por quilômetro para o 99
         const taxaBase = 5.00;   // Tarifa base do 99
         return (taxaBase + (precoPorKm * distancia)).toFixed(2);
     }
