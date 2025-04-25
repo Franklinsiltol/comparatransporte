@@ -1,252 +1,714 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotação de Transporte</title>
+    <title>Beemote Store - Produtos Fofos e Modernos</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+        :root {
+            --primary-color: #FF6B8B;
+            --secondary-color: #6BD5E1;
+            --accent-color: #FFD166;
+            --dark-color: #333333;
+            --light-color: #F7F7F7;
+            --white: #FFFFFF;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
         }
 
         .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
         }
 
-        h1 {
-            text-align: center;
-            color: #333;
+        /* Header Styles */
+        header {
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 15px 0;
         }
 
-        label {
-            margin: 10px 0 5px;
-            display: block;
-            font-weight: bold;
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .logo {
+            height: 50px;
         }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #28a745;
+        .mascote img {
+            height: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .mascote:hover img {
+            transform: rotate(10deg);
+        }
+
+        .search-container {
+            display: flex;
+            margin: 15px 0;
+        }
+
+        #search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid var(--secondary-color);
+            border-radius: 25px 0 0 25px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #search-button {
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 4px;
+            padding: 0 20px;
+            border-radius: 0 25px 25px 0;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
         }
 
-        button:hover {
-            background-color: #218838;
+        #search-button:hover {
+            background-color: #e05a7b;
         }
 
-        #overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 20px;
         }
 
-        #overlay .spinner {
+        nav a {
+            text-decoration: none;
+            color: var(--dark-color);
+            font-weight: 600;
+            padding: 5px 0;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 24px;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
         }
 
-        .results {
-            margin-top: 20px;
+        nav a:hover::after {
+            width: 100%;
         }
 
-        .result-item {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 10px;
+        /* Main Content Styles */
+        h2 {
+            margin: 30px 0 20px;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--accent-color);
+        }
+
+        .filter-container {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border: 1px solid #ddd;
-            cursor: pointer;
+            margin-bottom: 20px;
         }
 
-        .result-item .app-name {
-            font-weight: bold;
-            font-size: 18px;
+        .filter-container select {
+            padding: 8px 15px;
+            border: 2px solid var(--secondary-color);
+            border-radius: 5px;
+            background-color: var(--white);
+            font-size: 14px;
         }
 
-        .result-item .price {
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background-color: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 15px;
+        }
+
+        .product-title {
             font-size: 16px;
-            color: #28a745;
+            margin-bottom: 8px;
+            color: var(--dark-color);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .economy-message {
-            margin-top: 10px;
-            font-size: 18px;
-            color: #218838;
+        .product-price {
             font-weight: bold;
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .add-to-cart {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-to-cart:hover {
+            background-color: #e05a7b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 10px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            background-color: var(--white);
+            border: 1px solid var(--secondary-color);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .pagination button:hover:not(.active) {
+            background-color: var(--light-color);
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: var(--dark-color);
+            color: var(--white);
+            padding: 40px 0 0;
+        }
+
+        .footer-section {
+            margin-bottom: 30px;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-section a {
+            color: var(--white);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: var(--secondary-color);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-icons a {
+            color: var(--white);
+            font-size: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: var(--primary-color);
+        }
+
+        .copyright {
+            text-align: center;
+            padding: 15px 0;
+            background-color: rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+        }
+
+        /* Responsive Styles */
+        @media (min-width: 768px) {
+            header .container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .search-container {
+                margin: 0;
+                width: 40%;
+            }
+
+            .footer-content {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            nav ul {
+                justify-content: center;
+            }
+            
+            .filter-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Loading spinner */
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,107,139,0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin: 30px auto;
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 10px;
+        }
+
+        .no-results {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 40px 0;
+            color: var(--dark-color);
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <header>
+        <div class="container">
+            <div class="logo-container">
+                <div class="logo">Beemote Store</div>
+                <span class="mascote">
+                    🦛
+                </span>
+            </div>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="O que você está procurando?">
+                <button id="search-button"><i class="fas fa-search"></i></button>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#home">Início</a></li>
+                    <li><a href="#products">Produtos</a></li>
+                    <li><a href="#about">Sobre Nós</a></li>
+                    <li><a href="#contact">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-<div id="overlay">
-    <div class="spinner">Calculando cotações...</div>
-</div>
+    <main>
+        <section id="featured-products" class="container">
+            <h2>Destaques</h2>
+            <div class="products-grid" id="featured-products-grid">
+                <div class="loading"></div>
+                <p class="loading-text">Carregando produtos...</p>
+            </div>
+        </section>
 
-<div class="container">
-    <h1>Cotação de Transporte</h1>
-    <label for="start">Local de Partida</label>
-    <input type="text" id="start" placeholder="Digite o local de partida">
-    
-    <label for="destination">Destino</label>
-    <input type="text" id="destination" placeholder="Digite o destino">
+        <section id="all-products" class="container">
+            <h2>Todos os Produtos</h2>
+            <div class="filter-container">
+                <select id="category-filter">
+                    <option value="">Todas as categorias</option>
+                </select>
+                <select id="sort-by">
+                    <option value="relevance">Relevância</option>
+                    <option value="price_asc">Preço: menor para maior</option>
+                    <option value="price_desc">Preço: maior para menor</option>
+                </select>
+            </div>
+            <div class="products-grid" id="all-products-grid">
+                <div class="loading"></div>
+                <p class="loading-text">Carregando produtos...</p>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+    </main>
 
-    <button id="quoteButton">Obter Cotação</button>
+    <footer>
+        <div class="container">
+            <div class="footer-section">
+                <h3>Beemote Store</h3>
+                <p>Sua loja de produtos fofos e modernos.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-pinterest"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Links Úteis</h3>
+                <ul>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Serviço</a></li>
+                    <li><a href="#">Trocas e Devoluções</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contato</h3>
+                <p>contato@beemotestore.com</p>
+                <p>(11) 98765-4321</p>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2023 Beemote Store. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 
-    <div class="results" id="results"></div>
-    <div id="economyMessage" class="economy-message"></div>
-</div>
+    <script>
+        // Configurações da API
+        const API_KEY = '0ff84c9e-f757-4868-be49-4209f2581c50';
+        const PUBLISHER_ID = '1759561';
+        const API_ENDPOINT = 'https://api.awin.com/publishers/' + PUBLISHER_ID + '/products/?';
 
-<script>
-    // Função para calcular a distância entre dois pontos usando a fórmula de Haversine
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Raio da Terra em km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distancia = R * c; // Distância em km
-        return distancia;
-    }
+        // Elementos do DOM
+        const featuredProductsGrid = document.getElementById('featured-products-grid');
+        const allProductsGrid = document.getElementById('all-products-grid');
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const categoryFilter = document.getElementById('category-filter');
+        const sortBy = document.getElementById('sort-by');
+        const pagination = document.getElementById('pagination');
 
-    // Função para estimar preços do Uber com base na distância real
-    function calcularPrecoEstimadoUber(distancia) {
-        const precoPorKm = 4.10; // Preço estimado por quilômetro para o Uber
-        const taxaBase = 5.00;   // Tarifa base do Uber
-        return (taxaBase + (precoPorKm * distancia)).toFixed(2);
-    }
+        // Estado da aplicação
+        let products = [];
+        let filteredProducts = [];
+        let currentPage = 1;
+        const productsPerPage = 12;
+        let categories = [];
 
-    // Função para estimar preços do 99 com base na distância real
-    function calcularPrecoEstimado99(distancia) {
-        const precoPorKm = 4.20; // Preço estimado por quilômetro para o 99
-        const taxaBase = 5.00;   // Tarifa base do 99
-        return (taxaBase + (precoPorKm * distancia)).toFixed(2);
-    }
+        // Função para buscar produtos da API Awin
+        async function fetchProducts(searchTerm = '', category = '') {
+            try {
+                featuredProductsGrid.innerHTML = '<div class="loading"></div><p class="loading-text">Carregando produtos...</p>';
+                allProductsGrid.innerHTML = '<div class="loading"></div><p class="loading-text">Carregando produtos...</p>';
+                
+                // Parâmetros da API
+                const params = new URLSearchParams();
+                params.append('accessToken', API_KEY);
+                params.append('format', 'json');
+                
+                if (searchTerm) {
+                    params.append('search', searchTerm);
+                }
+                
+                if (category) {
+                    params.append('category', category);
+                }
+                
+                // Limitar a 100 resultados para demonstração
+                params.append('resultsPerPage', '100');
+                
+                const response = await fetch(API_ENDPOINT + params.toString());
+                
+                if (!response.ok) {
+                    throw new Error(`Erro na API: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data || !data.products) {
+                    throw new Error('Formato de dados inesperado da API');
+                }
+                
+                // Mapear os produtos da API para nosso formato
+                products = data.products.map(product => ({
+                    id: product.awin_product_id,
+                    title: product.product_name,
+                    price: parseFloat(product.search_price),
+                    image: product.aw_image_url || product.merchant_image_url || 'https://via.placeholder.com/300x300?text=Produto+Sem+Imagem',
+                    category: product.merchant_category || 'Outros',
+                    url: product.aw_deep_link,
+                    merchant: product.merchant_name
+                }));
+                
+                filteredProducts = [...products];
+                
+                // Extrair categorias únicas
+                categories = [...new Set(products.map(product => product.category))];
+                populateCategoryFilter();
+                
+                displayFeaturedProducts();
+                displayAllProducts();
+                updatePagination();
+                
+            } catch (error) {
+                console.error('Erro ao buscar produtos:', error);
+                featuredProductsGrid.innerHTML = '<p class="no-results">Não foi possível carregar os produtos. Por favor, tente novamente mais tarde.</p>';
+                allProductsGrid.innerHTML = '<p class="no-results">Não foi possível carregar os produtos. Por favor, tente novamente mais tarde.</p>';
+            }
+        }
 
-    // Função para geocodificar um endereço e retornar coordenadas usando OpenStreetMap Nominatim
-    function geocodeAddress(address) {
-        return fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.length > 0) {
-                    const location = data[0];
-                    return { lat: parseFloat(location.lat), lng: parseFloat(location.lon) };
-                } else {
-                    throw new Error('Geocodificação falhou');
+        // Função para popular o filtro de categorias
+        function populateCategoryFilter() {
+            categoryFilter.innerHTML = '<option value="">Todas as categorias</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        // Função para exibir produtos em destaque
+        function displayFeaturedProducts() {
+            featuredProductsGrid.innerHTML = '';
+            
+            // Selecionar alguns produtos aleatórios para exibir como destaque
+            const featuredProducts = getRandomProducts(filteredProducts, 6);
+            
+            if (featuredProducts.length === 0) {
+                featuredProductsGrid.innerHTML = '<p class="no-results">Nenhum produto em destaque encontrado.</p>';
+                return;
+            }
+            
+            featuredProducts.forEach(product => {
+                const productCard = createProductCard(product);
+                featuredProductsGrid.appendChild(productCard);
+            });
+        }
+
+        // Função para exibir todos os produtos com paginação
+        function displayAllProducts() {
+            allProductsGrid.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * productsPerPage;
+            const endIndex = startIndex + productsPerPage;
+            const productsToDisplay = filteredProducts.slice(startIndex, endIndex);
+            
+            if (productsToDisplay.length === 0) {
+                allProductsGrid.innerHTML = '<p class="no-results">Nenhum produto encontrado. Tente alterar seus critérios de busca.</p>';
+                return;
+            }
+            
+            productsToDisplay.forEach(product => {
+                const productCard = createProductCard(product);
+                allProductsGrid.appendChild(productCard);
+            });
+        }
+
+        // Função para criar um card de produto
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            card.innerHTML = `
+                <img src="${product.image}" alt="${product.title}" class="product-image" onerror="this.src='https://via.placeholder.com/300x300?text=Imagem+Indispon%C3%ADvel'">
+                <div class="product-info">
+                    <h3 class="product-title">${product.title}</h3>
+                    <p class="product-price">R$ ${product.price.toFixed(2)}</p>
+                    <button class="add-to-cart" data-id="${product.id}">Adicionar ao Carrinho</button>
+                    <a href="${product.url}" target="_blank" class="view-details" style="display: block; text-align: center; margin-top: 8px; color: var(--secondary-color); text-decoration: none;">Ver detalhes</a>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Função para atualizar a paginação
+        function updatePagination() {
+            pagination.innerHTML = '';
+            
+            const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+            
+            if (totalPages <= 1) return;
+            
+            // Botão Anterior
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.innerHTML = '&laquo; Anterior';
+                prevButton.addEventListener('click', () => {
+                    currentPage--;
+                    displayAllProducts();
+                    updatePagination();
+                    window.scrollTo({ top: allProductsGrid.offsetTop - 100, behavior: 'smooth' });
+                });
+                pagination.appendChild(prevButton);
+            }
+            
+            // Números das páginas
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                if (i === currentPage) {
+                    pageButton.classList.add('active');
+                }
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    displayAllProducts();
+                    updatePagination();
+                    window.scrollTo({ top: allProductsGrid.offsetTop - 100, behavior: 'smooth' });
+                });
+                pagination.appendChild(pageButton);
+            }
+            
+            // Botão Próximo
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.innerHTML = 'Próximo &raquo;';
+                nextButton.addEventListener('click', () => {
+                    currentPage++;
+                    displayAllProducts();
+                    updatePagination();
+                    window.scrollTo({ top: allProductsGrid.offsetTop - 100, behavior: 'smooth' });
+                });
+                pagination.appendChild(nextButton);
+            }
+        }
+
+        // Função para filtrar produtos
+        function filterProducts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCategory = categoryFilter.value;
+            const sortOption = sortBy.value;
+            
+            filteredProducts = products.filter(product => {
+                const matchesSearch = product.title.toLowerCase().includes(searchTerm);
+                const matchesCategory = selectedCategory === '' || product.category === selectedCategory;
+                return matchesSearch && matchesCategory;
+            });
+            
+            // Ordenar produtos
+            switch (sortOption) {
+                case 'price_asc':
+                    filteredProducts.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price_desc':
+                    filteredProducts.sort((a, b) => b.price - a.price);
+                    break;
+                default:
+                    // Mantém a ordenação padrão (relevância)
+                    break;
+            }
+            
+            currentPage = 1;
+            displayFeaturedProducts();
+            displayAllProducts();
+            updatePagination();
+        }
+
+        // Função auxiliar para obter produtos aleatórios
+        function getRandomProducts(productsArray, count) {
+            if (productsArray.length <= count) return [...productsArray];
+            const shuffled = [...productsArray].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // Event Listeners
+        searchButton.addEventListener('click', filterProducts);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') filterProducts();
+        });
+        categoryFilter.addEventListener('change', filterProducts);
+        sortBy.addEventListener('change', filterProducts);
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchProducts();
+            
+            // Simular clique no botão de adicionar ao carrinho (event delegation)
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('add-to-cart')) {
+                    const productId = e.target.getAttribute('data-id');
+                    const product = products.find(p => p.id == productId);
+                    if (product) {
+                        alert(`${product.title} adicionado ao carrinho!`);
+                        // Aqui você poderia implementar um carrinho de compras simples
+                    }
                 }
             });
-    }
-
-    // Função para gerar links para apps Uber ou 99 com rota predefinida
-    function generateAppLink(appName, startLat, startLong, destLat, destLong) {
-        if (appName === 'Uber') {
-            return `uber://?action=setPickup&pickup[latitude]=${startLat}&pickup[longitude]=${startLong}&dropoff[latitude]=${destLat}&dropoff[longitude]=${destLong}`;
-        } else if (appName === '99') {
-            return `https://99app.com/?action=setPickup&pickup[latitude]=${startLat}&pickup[longitude]=${startLong}&dropoff[latitude]=${destLat}&dropoff[longitude]=${destLong}`;
-        }
-        return '#';
-    }
-
-    // Função para obter cotações reais com base na distância calculada
-    async function obterCotacoes() {
-        const startAddress = document.getElementById('start').value;
-        const destinationAddress = document.getElementById('destination').value;
-
-        // Exibir overlay durante o cálculo
-        document.getElementById('overlay').style.display = 'block';
-
-        try {
-            // Geocodificar ambos os endereços
-            const startCoordinates = await geocodeAddress(startAddress);
-            const destinationCoordinates = await geocodeAddress(destinationAddress);
-
-            // Calcular a distância real entre os dois pontos
-            const distancia = calcularDistancia(
-                startCoordinates.lat, startCoordinates.lng,
-                destinationCoordinates.lat, destinationCoordinates.lng
-            );
-
-            // Calcular estimativas de preços com base na distância real
-            const estimativaUber = calcularPrecoEstimadoUber(distancia);
-            const estimativa99 = calcularPrecoEstimado99(distancia);
-
-            // Ordenar as estimativas pelo valor
-            const resultados = [
-                { nome: 'Uber', preco: parseFloat(estimativaUber) },
-                { nome: '99', preco: parseFloat(estimativa99) }
-            ];
-
-            resultados.sort((a, b) => a.preco - b.preco);
-
-            // Exibir os resultados
-            const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = '';
-
-            resultados.forEach(cotacao => {
-                const div = document.createElement('div');
-                div.classList.add('result-item');
-                div.innerHTML = `
-                    <span class="app-name">${cotacao.nome}</span>
-                    <span class="price">R$ ${cotacao.preco}</span>
-                `;
-                div.addEventListener('click', function() {
-                    const appLink = generateAppLink(cotacao.nome, startCoordinates.lat, startCoordinates.lng, destinationCoordinates.lat, destinationCoordinates.lng);
-                    window.location.href = appLink; // Abrir o app com a rota predefinida
-                });
-                resultsContainer.appendChild(div);
-            });
-
-            // Exibir mensagem de economia
-            const economia = (resultados[1].preco - resultados[0].preco).toFixed(2);
-            const economyMessage = document.getElementById('economyMessage');
-            economyMessage.textContent = `Você economiza R$ ${economia} se escolher ${resultados[0].nome}!`;
-
-        } catch
-        (error) {
-            console.error('Erro ao obter cotações:', error);
-            alert('Não foi possível obter as cotações. Verifique os endereços inseridos.');
-        } finally {
-            // Ocultar overlay após o cálculo
-            document.getElementById('overlay').style.display = 'none';
-        }
-    }
-
-    // Adicionar evento ao botão para obter cotações
-    document.getElementById('quoteButton').addEventListener('click', obterCotacoes);
-</script>
-
+        });
+    </script>
 </body>
 </html>
