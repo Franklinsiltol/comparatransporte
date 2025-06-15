@@ -385,6 +385,136 @@
                 </ul>
             </nav>
         </div>
+        <!-- Início do Código do Botão Flutuante -->
+<div id="floating-button-container">
+    <!-- O código é encapsulado em um IIFE para não poluir o escopo global -->
+    <style>
+        #fab-button {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #007bff;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 9998;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease-in-out, background-color 0.3s;
+        }
+        #fab-button:hover {
+            transform: scale(1.1);
+        }
+        #fab-button svg {
+            width: 32px;
+            height: 32px;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .fab-icon-close {
+            display: none;
+            transform: rotate(-90deg);
+        }
+        #fab-button.active .fab-icon-open {
+            opacity: 0;
+            transform: rotate(90deg);
+            display: none;
+        }
+        #fab-button.active .fab-icon-close {
+            opacity: 1;
+            transform: rotate(0deg);
+            display: block;
+        }
+        #fab-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s;
+        }
+        #fab-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .fab-modal-content {
+            background-color: #fff;
+            width: 90%;
+            height: 90%;
+            max-width: 1200px;
+            max-height: 800px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        #fab-modal.show .fab-modal-content {
+            transform: scale(1);
+        }
+        .fab-modal-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            #fab-button {
+                width: 55px;
+                height: 55px;
+            }
+             .fab-modal-content {
+                width: 95%;
+                height: 85%;
+                border-radius: 10px;
+            }
+        }
+    </style>
+
+    <button id="fab-button">
+        <span class="fab-icon-open"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span>
+        <span class="fab-icon-close"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span>
+    </button>
+    
+    <div id="fab-modal">
+        <div class="fab-modal-content">
+            <iframe src="https://ia-reten-o.pages.dev/" title="Conteúdo do Modal"></iframe>
+        </div>
+    </div>
+    
+    <script>
+        (function() {
+            const fabButton = document.getElementById('fab-button');
+            const fabModal = document.getElementById('fab-modal');
+
+            if (!fabButton || !fabModal) return;
+
+            fabButton.addEventListener('click', () => {
+                fabModal.classList.toggle('show');
+                fabButton.classList.toggle('active');
+            });
+
+            // Opcional: fechar o modal ao clicar fora da área do conteúdo
+            fabModal.addEventListener('click', (e) => {
+                if (e.target === fabModal) {
+                    fabModal.classList.remove('show');
+                    fabButton.classList.remove('active');
+                }
+            });
+        })();
+    </script>
+</div>
+<!-- Fim do Código do Botão Flutuante -->
     </header>
 
     <main>
@@ -693,7 +823,7 @@
         categoryFilter.addEventListener('change', filterProducts);
         sortBy.addEventListener('change', filterProducts);
 
-        // Inicialização
+        // Inicializaçãok
         document.addEventListener('DOMContentLoaded', () => {
             fetchProducts();
             
